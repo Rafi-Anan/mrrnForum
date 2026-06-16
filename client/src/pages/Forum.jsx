@@ -17,14 +17,14 @@ function Forum() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <h2 className="text-3xl font-bold mb-6">Forum Posts</h2>
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6">Forum Posts</h2>
 
       <SearchBar search={search} setSearch={setSearch} onSearch={() => fetchPosts(search)} />
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {posts.length === 0 ? (
-          <p>No posts found.</p>
+          <p className="col-span-full text-center text-gray-500 py-8">No posts found.</p>
         ) : (
           posts.map((post) => <PostCard key={post._id} post={post} />)
         )}

@@ -32,9 +32,9 @@ function Register() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-12 px-4">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-2xl font-bold mb-6">Register</h2>
+    <div className="max-w-md mx-auto py-8 md:py-12 px-4">
+      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-lg md:rounded-2xl shadow">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">Register</h2>
 
         <input
           type="text"
@@ -42,7 +42,7 @@ function Register() {
           placeholder="Name"
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
         <input
@@ -51,7 +51,7 @@ function Register() {
           placeholder="Email"
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
         <input
@@ -60,10 +60,10 @@ function Register() {
           placeholder="Password"
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
-        <button className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">
+        <button className="w-full bg-blue-600 text-white py-2 md:py-3 rounded-lg md:rounded-xl hover:bg-blue-700 transition text-sm md:text-base">
           Register
         </button>
       </form>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import siteConfig from "../config/siteConfig";
 
 const UserDetails = () => {
   const { userId } = useParams();
@@ -26,6 +27,10 @@ const UserDetails = () => {
     status: "completed"
   });
 
+  const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
+
+  const [selectedPayments, setSelectedPayments] = useState([]);
+
   useEffect(() => {
     fetchUserDetails();
     fetchUserPayments();
@@ -44,15 +49,16 @@ const UserDetails = () => {
 
   const fetchUserDetails = async () => {
     try {
-      // For now, we'll get user details from the users list
-      // In a real app, you might want a separate endpoint for user details
       const res = await api.get("/users");
       const foundUser = res.data.find(u => u._id === userId);
       if (foundUser) {
         setUser(foundUser);
+      } else {
+        console.error("User not found in response");
       }
     } catch (error) {
-      alert("Failed to fetch user details");
+      console.error("Failed to fetch user details:", error.response?.data || error.message);
+      alert(`Failed to fetch user: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -246,7 +252,7 @@ const UserDetails = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="text-center">Loading user details...</div>
+        <div className="text-center text-sm md:text-base">Loading user details...</div>
       </div>
     );
   }
@@ -254,10 +260,10 @@ const UserDetails = () => {
   if (!user) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="text-center text-red-600">User not found</div>
+        <div className="text-center text-red-600 text-sm md:text-base">User not found</div>
         <button
           onClick={() => navigate("/users")}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm md:text-base"
         >
           Back to Users
         </button>
@@ -266,81 +272,81 @@ const UserDetails = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">User Details</h1>
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">User Details</h1>
         <button
           onClick={() => navigate("/users")}
-          className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+          className="w-full sm:w-auto bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm md:text-base"
         >
           Back to Users
         </button>
       </div>
 
       {/* User Info */}
-      <div className="bg-white p-6 rounded-2xl shadow mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">User Information</h2>
+      <div className="bg-white p-6 md:p-8 rounded-lg md:rounded-2xl shadow mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold">User Information</h2>
           <button
             onClick={openEditProfile}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
           >
             Edit Profile
           </button>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Profile Photo */}
           <div className="flex flex-col items-center">
-            <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden mb-3 shadow-lg">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden mb-3 shadow-lg">
               {user.profilePhoto ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profilePhoto}`}
+                  src={`${apiBaseUrl}/${user.profilePhoto}`}
                   alt={user.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-3xl font-semibold text-gray-600">
+                <span className="text-2xl md:text-3xl font-semibold text-gray-600">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
-            <p className="text-center text-gray-600 font-medium">Profile Photo</p>
+            <p className="text-center text-gray-600 font-medium text-xs md:text-sm">Profile Photo</p>
           </div>
 
           {/* NID */}
           <div className="flex flex-col items-center">
-            <div className="w-32 h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden mb-3 shadow-lg border-2 border-gray-300">
+            <div className="w-24 h-32 md:w-32 md:h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden mb-3 shadow-lg border-2 border-gray-300">
               {user.nid ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.nid}`}
+                  src={`${apiBaseUrl}/${user.nid}`}
                   alt={`${user.name} NID`}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-center text-gray-500 text-sm px-4">No NID uploaded</span>
+                <span className="text-center text-gray-500 text-xs px-2">No NID uploaded</span>
               )}
             </div>
-            <p className="text-center text-gray-600 font-medium">NID</p>
+            <p className="text-center text-gray-600 font-medium text-xs md:text-sm">NID</p>
           </div>
 
           {/* User Details */}
-          <div className="md:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="text-lg font-semibold text-gray-900">{user.name}</p>
+                <p className="text-xs md:text-sm text-gray-600">Name</p>
+                <p className="text-base md:text-lg font-semibold text-gray-900">{user.name}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="text-lg font-semibold text-gray-900">{user.email}</p>
+                <p className="text-xs md:text-sm text-gray-600">Email</p>
+                <p className="text-base md:text-lg font-semibold text-gray-900 truncate">{user.email}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Mobile</p>
-                <p className="text-lg font-semibold text-gray-900">{user.mobile || "N/A"}</p>
+                <p className="text-xs md:text-sm text-gray-600">Mobile</p>
+                <p className="text-base md:text-lg font-semibold text-gray-900">{user.mobile || "N/A"}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Role</p>
+                <p className="text-xs md:text-sm text-gray-600">Role</p>
                 <p>
                   <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                     user.role === 'admin'
@@ -358,8 +364,8 @@ const UserDetails = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Joined</p>
-                <p className="text-lg font-semibold text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs md:text-sm text-gray-600">Joined</p>
+                <p className="text-base md:text-lg font-semibold text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -368,12 +374,20 @@ const UserDetails = () => {
 
       {/* Edit Profile Modal */}
       {showEditProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
-            <form onSubmit={handleUpdateProfile}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-lg md:rounded-2xl shadow-xl max-w-md w-full">
+            <div className="sticky top-0 bg-white border-b p-4 md:p-6 flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold">Edit Profile</h2>
+              <button
+                onClick={() => setShowEditProfile(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleUpdateProfile} className="p-4 md:p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
                 <input
@@ -382,12 +396,12 @@ const UserDetails = () => {
                   value={editForm.name}
                   onChange={handleEditFormChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -396,12 +410,12 @@ const UserDetails = () => {
                   value={editForm.email}
                   onChange={handleEditFormChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Mobile Number
                 </label>
                 <input
@@ -409,12 +423,12 @@ const UserDetails = () => {
                   name="mobile"
                   value={editForm.mobile}
                   onChange={handleEditFormChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Update Profile Photo
                 </label>
                 <input
@@ -422,12 +436,12 @@ const UserDetails = () => {
                   name="profilePhoto"
                   onChange={handleEditFormChange}
                   accept="image/*"
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Update NID
                 </label>
                 <input
@@ -435,21 +449,21 @@ const UserDetails = () => {
                   name="nid"
                   onChange={handleEditFormChange}
                   accept="image/*"
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
                 >
                   Save Changes
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowEditProfile(false)}
-                  className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm md:text-base"
                 >
                   Cancel
                 </button>
@@ -460,34 +474,54 @@ const UserDetails = () => {
       )}
 
       {/* Payments Section */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Monthly Payments</h2>
-          <button
-            onClick={() => setShowAddPayment(!showAddPayment)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-          >
-            {showAddPayment ? "Cancel" : "Add Payment"}
-          </button>
+      <div className="bg-white p-6 md:p-8 rounded-lg md:rounded-2xl shadow">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold">Monthly Payments</h2>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => setShowAddPayment(!showAddPayment)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base"
+            >
+              {showAddPayment ? "Cancel" : "Add Payment"}
+            </button>
+            <button
+              onClick={async () => {
+                if (selectedPayments.length === 0) return;
+                if (!window.confirm(`Delete ${selectedPayments.length} selected payment(s)? This action cannot be undone.`)) return;
+                try {
+                  await api.post('/payments/bulk-delete', { ids: selectedPayments });
+                  alert('Selected payments deleted');
+                  setSelectedPayments([]);
+                  fetchUserPayments();
+                } catch (error) {
+                  alert(error.response?.data?.message || 'Failed to delete selected payments');
+                }
+              }}
+              className={`bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm md:text-base ${selectedPayments.length===0? 'opacity-50 cursor-not-allowed':''}`}
+              disabled={selectedPayments.length===0}
+            >
+              Delete Selected
+            </button>
+          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4 mb-6">
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-700 font-semibold">Total Deposit</p>
-            <p className="text-2xl font-bold text-blue-900">${totalDeposit.toFixed(2)}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="rounded-lg md:rounded-2xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs md:text-sm text-blue-700 font-semibold">Total Deposit</p>
+            <p className="text-xl md:text-2xl font-bold text-blue-900">${totalDeposit.toFixed(2)}</p>
           </div>
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-700 font-semibold">Due Amount</p>
-            <p className="text-2xl font-bold text-blue-900">${dueAmount.toFixed(2)}</p>
+          <div className="rounded-lg md:rounded-2xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs md:text-sm text-blue-700 font-semibold">Due Amount</p>
+            <p className="text-xl md:text-2xl font-bold text-blue-900">${dueAmount.toFixed(2)}</p>
           </div>
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-700 font-semibold">Start Date</p>
-            <p className="text-2xl font-bold text-blue-900">Sept/2022</p>
+          <div className="rounded-lg md:rounded-2xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs md:text-sm text-blue-700 font-semibold">Start Date</p>
+            <p className="text-xl md:text-2xl font-bold text-blue-900">Sept/2022</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between">
+          <div className="rounded-lg md:rounded-2xl border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between">
             <div>
-              <p className="text-sm text-slate-700 font-semibold">Total (Deposit + Due)</p>
-              <p className="text-2xl font-bold text-slate-900">${totalWithDue.toFixed(2)}</p>
+              <p className="text-xs md:text-sm text-slate-700 font-semibold">Total (Deposit + Due)</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900">${totalWithDue.toFixed(2)}</p>
             </div>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-white shadow-md">
               <span className="h-2 w-2 rounded-full bg-white" />
@@ -498,11 +532,11 @@ const UserDetails = () => {
 
         {/* Add Payment Form */}
         {showAddPayment && (
-          <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+          <div className="mb-6 p-4 border rounded-lg bg-gray-50 overflow-x-auto">
             <h3 className="text-lg font-semibold mb-4">Add New Payment</h3>
-            <form onSubmit={handlePaymentSubmit} className="grid md:grid-cols-2 gap-4">
+            <form onSubmit={handlePaymentSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Amount per Month
                 </label>
                 <input
@@ -510,12 +544,12 @@ const UserDetails = () => {
                   name="amount"
                   value={monthlyAmount}
                   disabled
-                  className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                  className="w-full border rounded-lg px-3 py-2 bg-gray-100 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Month
                 </label>
                 <select
@@ -523,7 +557,7 @@ const UserDetails = () => {
                   value={paymentForm.month}
                   onChange={handlePaymentChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="">Select Month</option>
                   {months.map((month) => {
@@ -538,7 +572,7 @@ const UserDetails = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Year
                 </label>
                 <input
@@ -547,14 +581,14 @@ const UserDetails = () => {
                   value={paymentForm.year}
                   onChange={handlePaymentChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
                   min="2022"
                   max="2030"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Number of Months
                 </label>
                 <input
@@ -564,7 +598,7 @@ const UserDetails = () => {
                   onChange={handlePaymentChange}
                   required
                   min="1"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
                   placeholder="Enter number of months"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -573,14 +607,14 @@ const UserDetails = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={paymentForm.status}
                   onChange={handlePaymentChange}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="completed">Completed</option>
                   <option value="pending">Pending</option>
@@ -588,20 +622,8 @@ const UserDetails = () => {
                 </select>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total Amount
-                </label>
-                <input
-                  type="text"
-                  value={`${totalAmount.toFixed(2)} Taka`}
-                  disabled
-                  className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="sm:col-span-2 lg:col-span-3">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
                 <input
@@ -609,15 +631,27 @@ const UserDetails = () => {
                   name="description"
                   value={paymentForm.description}
                   onChange={handlePaymentChange}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
                   placeholder="Optional description"
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2 lg:col-span-3">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                  Total Amount
+                </label>
+                <input
+                  type="text"
+                  value={`${totalAmount.toFixed(2)} Taka`}
+                  disabled
+                  className="w-full border rounded-lg px-3 py-2 bg-gray-100 text-sm"
+                />
+              </div>
+
+              <div className="sm:col-span-2 lg:col-span-3">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm md:text-base"
                 >
                   Add Payment
                 </button>
@@ -628,65 +662,85 @@ const UserDetails = () => {
 
         {/* Payments Table */}
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="w-full text-xs md:text-sm">
+            <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    checked={selectedPayments.length === payments.length && payments.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedPayments(payments.map(p => p._id));
+                      else setSelectedPayments([]);
+                    }}
+                  />
+                </th>
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Month/Year
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Desc
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date Added
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {payments.map((payment) => (
                 <tr key={payment._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {payment.month} {payment.year}
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedPayments.includes(payment._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedPayments(prev => [...prev, payment._id]);
+                        else setSelectedPayments(prev => prev.filter(id => id !== payment._id));
+                      }}
+                    />
+                  </td>
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="text-xs font-medium text-gray-900">
+                      {payment.month.substring(0, 3)} {payment.year}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="text-xs text-gray-900">
                       ${payment.amount.toFixed(2)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded ${
                       payment.status === 'completed'
                         ? 'bg-green-100 text-green-800'
                         : payment.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {payment.status}
+                      {payment.status.substring(0, 3)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {payment.description || "-"}
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="text-xs text-gray-500 truncate max-w-xs">
+                      {payment.description ? payment.description.substring(0, 10) + '...' : "-"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(payment.createdAt).toLocaleDateString()}
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-500">
+                    {new Date(payment.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium">
                     <button
                       onClick={() => handleDeletePayment(payment._id, `${payment.month} ${payment.year}`)}
-                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
+                      className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded hover:bg-red-700 transition-colors text-xs"
                     >
                       Delete
                     </button>
@@ -698,7 +752,7 @@ const UserDetails = () => {
         </div>
 
         {payments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 text-sm md:text-base">
             No payments found for this user.
           </div>
         )}

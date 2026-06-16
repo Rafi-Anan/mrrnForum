@@ -3,7 +3,8 @@ import {
   getUserPayments,
   createPayment,
   updatePayment,
-  deletePayment
+  deletePayment,
+  deletePayments
 } from "../controllers/paymentController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
@@ -21,5 +22,8 @@ router.put("/:id", authMiddleware, adminMiddleware, updatePayment);
 
 // Delete a payment
 router.delete("/:id", authMiddleware, adminMiddleware, deletePayment);
+
+// Bulk delete payments
+router.post("/bulk-delete", authMiddleware, adminMiddleware, deletePayments);
 
 export default router;

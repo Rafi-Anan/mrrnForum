@@ -97,3 +97,19 @@ export const deletePayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deletePayments = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "No payment IDs provided" });
+    }
+
+    const result = await Payment.deleteMany({ _id: { $in: ids } });
+
+    res.json({ message: "Payments deleted successfully", deletedCount: result.deletedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

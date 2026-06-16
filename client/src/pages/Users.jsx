@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import siteConfig from "../config/siteConfig";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -16,6 +17,7 @@ const Users = () => {
     nid: null
   });
   const navigate = useNavigate();
+  const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
 
   useEffect(() => {
     fetchUsers();
@@ -73,7 +75,7 @@ const Users = () => {
         nid: null
       });
       setShowAddUser(false);
-      fetchUsers(); // Refresh the users list
+      fetchUsers();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to create user");
     }
@@ -101,46 +103,54 @@ const Users = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
-        <div className="text-center">Loading users...</div>
+        <div className="text-center text-sm md:text-base">Loading users...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Users Management</h1>
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Users Management</h1>
         <button
           onClick={() => setShowAddUser(true)}
-          className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          className="w-full sm:w-auto bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
         >
           Add User
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm text-blue-700 font-semibold">Total Deposit</p>
-          <p className="text-2xl font-bold text-blue-900">${totalDeposit.toFixed(2)}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 mb-6">
+        <div className="rounded-lg md:rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-xs md:text-sm text-blue-700 font-semibold">Total Deposit</p>
+          <p className="text-xl md:text-2xl font-bold text-blue-900">${totalDeposit.toFixed(2)}</p>
         </div>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700 font-semibold">Total Due</p>
-          <p className="text-2xl font-bold text-red-900">${totalDue.toFixed(2)}</p>
+        <div className="rounded-lg md:rounded-2xl border border-red-200 bg-red-50 p-4">
+          <p className="text-xs md:text-sm text-red-700 font-semibold">Total Due</p>
+          <p className="text-xl md:text-2xl font-bold text-red-900">${totalDue.toFixed(2)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700 font-semibold">Total (Deposit + Due)</p>
-          <p className="text-2xl font-bold text-slate-900">${totalDueAndDeposit.toFixed(2)}</p>
+        <div className="rounded-lg md:rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs md:text-sm text-slate-700 font-semibold">Total (Deposit + Due)</p>
+          <p className="text-xl md:text-2xl font-bold text-slate-900">${totalDueAndDeposit.toFixed(2)}</p>
         </div>
       </div>
 
       {/* Add User Modal */}
       {showAddUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4">Add New User</h2>
-            <form onSubmit={handleCreateUser}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-lg md:rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 md:p-6 flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold">Add New User</h2>
+              <button
+                onClick={() => setShowAddUser(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleCreateUser} className="p-4 md:p-6">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
                 <input
@@ -149,13 +159,13 @@ const Users = () => {
                   value={userForm.name}
                   onChange={handleUserFormChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="Enter full name"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -164,13 +174,13 @@ const Users = () => {
                   value={userForm.email}
                   onChange={handleUserFormChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="Enter email address"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <input
@@ -179,14 +189,14 @@ const Users = () => {
                   value={userForm.password}
                   onChange={handleUserFormChange}
                   required
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="Enter password"
                   minLength="6"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Mobile Number
                 </label>
                 <input
@@ -194,20 +204,20 @@ const Users = () => {
                   name="mobile"
                   value={userForm.mobile}
                   onChange={handleUserFormChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="Enter mobile number"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Role
                 </label>
                 <select
                   name="role"
                   value={userForm.role}
                   onChange={handleUserFormChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
@@ -218,7 +228,7 @@ const Users = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   Profile Photo
                 </label>
                 <input
@@ -226,12 +236,12 @@ const Users = () => {
                   name="profilePhoto"
                   onChange={handleUserFormChange}
                   accept="image/*"
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                   NID
                 </label>
                 <input
@@ -239,21 +249,21 @@ const Users = () => {
                   name="nid"
                   onChange={handleUserFormChange}
                   accept="image/*"
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
                 >
                   Create User
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddUser(false)}
-                  className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm md:text-base"
                 >
                   Cancel
                 </button>
@@ -263,51 +273,48 @@ const Users = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
+      <div className="bg-white rounded-lg md:rounded-2xl shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="w-full text-xs md:text-sm">
+            <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  S.No.
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  No
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Photo
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Deposit
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Deposit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Amount
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Due
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {users.map((user, index) => (
                 <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-900">
                     {index + 1}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {user.profilePhoto ? (
                         <img
-                          src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.profilePhoto}`}
+                          src={`${apiBaseUrl}/${user.profilePhoto}`}
                           alt={user.name}
                           className="w-full h-full object-cover"
                         />
@@ -318,44 +325,41 @@ const Users = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-xs">
                       {user.name}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <div className="text-xs text-gray-500 truncate max-w-xs">{user.email}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                    <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded ${
                       user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
                       user.role === 'president' ? 'bg-red-100 text-red-800' :
                       user.role === 'vice-president' ? 'bg-yellow-100 text-yellow-800' :
                       user.role === 'cashier' ? 'bg-blue-100 text-blue-800' :
                       'bg-green-100 text-green-800'
                     }`}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      {user.role === 'vice-president' ? 'VP' : user.role === 'member' ? 'Mem' : user.role.substring(0, 3).toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-900">
                     ${user.totalDeposit?.toFixed(2) || '0.00'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-900">
                     ${user.dueAmount?.toFixed(2) || '0.00'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
+                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium space-x-0.5">
                     <button
                       onClick={() => handleUserDetails(user._id)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="bg-blue-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-blue-700 transition-colors"
                     >
                       Details
                     </button>
                     <button
                       onClick={() => handleDeleteUser(user._id, user.name)}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                      className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-red-700 transition-colors"
                     >
                       Delete
                     </button>
@@ -367,7 +371,7 @@ const Users = () => {
         </div>
 
         {users.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 text-sm md:text-base">
             No users found.
           </div>
         )}

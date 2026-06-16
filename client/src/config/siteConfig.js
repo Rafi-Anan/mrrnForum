@@ -1,9 +1,9 @@
 const siteConfig = {
-  siteName: "My Professional Forum",
-  logo: "/logo.png",
-  email: "info@example.com",
-  phone: "+8801XXXXXXXXX",
-  address: "Dhaka, Bangladesh",
+  siteName: "AD-Din Professional Forum",
+  logo: "/Ad-Din.png",
+  email: "rafibstd@gmail.com",
+  phone: "+8801303025015",
+  address: "Nabinagar, Brahmanbaria, Bangladesh",
   backendUrl: "http://localhost:5000"
 };
 

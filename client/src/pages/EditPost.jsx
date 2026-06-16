@@ -57,9 +57,9 @@ function EditPost() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-2xl font-bold mb-6">Edit Post</h2>
+    <div className="max-w-2xl mx-auto py-6 md:py-10 px-4">
+      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-lg md:rounded-2xl shadow">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">Edit Post</h2>
 
         <input
           type="text"
@@ -67,7 +67,7 @@ function EditPost() {
           value={formData.title}
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
         <select
@@ -75,7 +75,7 @@ function EditPost() {
           value={formData.category}
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         >
           <option value="">Select Category</option>
           {categories.map((cat) => (
@@ -88,7 +88,7 @@ function EditPost() {
           name="tags"
           value={formData.tags}
           onChange={handleChange}
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
         <textarea
@@ -97,10 +97,10 @@ function EditPost() {
           value={formData.content}
           onChange={handleChange}
           required
-          className="w-full border rounded-xl px-4 py-3 mb-4"
+          className="w-full border rounded-lg md:rounded-xl px-4 py-2 md:py-3 mb-4 text-sm md:text-base"
         />
 
-        <button className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">
+        <button className="w-full bg-blue-600 text-white py-2 md:py-3 rounded-lg md:rounded-xl hover:bg-blue-700 transition text-sm md:text-base">
           Update Post
         </button>
       </form>
