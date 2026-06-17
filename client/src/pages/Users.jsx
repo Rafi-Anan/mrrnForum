@@ -18,6 +18,7 @@ const Users = () => {
   });
   const navigate = useNavigate();
   const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
     fetchUsers();
@@ -95,6 +96,28 @@ const Users = () => {
     }
   };
 
+  const handleRequestPayment = async (userId) => {
+    if (!currentUser || currentUser.id !== userId) {
+      return alert("You can only request payment for your own account.");
+    }
+
+    const amount = prompt("Enter amount to request:");
+    if (!amount) return;
+    const month = prompt("Enter month (e.g., January):");
+    if (!month) return;
+    const year = prompt("Enter year (e.g., 2026):");
+    if (!year) return;
+    const description = prompt("Description (optional):") || "";
+
+    try {
+      await api.post("/payments", { amount: Number(amount), month, year, description });
+      alert("Payment request submitted");
+      fetchUsers();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to submit payment request");
+    }
+  };
+
   const totalDeposit = users.reduce((sum, user) => sum + (user.totalDeposit || 0), 0);
   const totalDue = users.reduce((sum, user) => sum + (user.dueAmount || 0), 0);
   const totalDueAndDeposit = totalDeposit + totalDue;
@@ -112,12 +135,14 @@ const Users = () => {
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">Users Management</h1>
-        <button
-          onClick={() => setShowAddUser(true)}
-          className="w-full sm:w-auto bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
-        >
-          Add User
-        </button>
+        {currentUser?.role === 'admin' && (
+          <button
+            onClick={() => setShowAddUser(true)}
+            className="w-full sm:w-auto bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
+          >
+            Add User
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 mb-6">
@@ -351,18 +376,32 @@ const Users = () => {
                     ${user.dueAmount?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium space-x-0.5">
-                    <button
-                      onClick={() => handleUserDetails(user._id)}
-                      className="bg-blue-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                    >
-                      Details
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user._id, user.name)}
-                      className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-red-700 transition-colors"
-                    >
-                      Delete
-                    </button>
+                    {currentUser?.role === 'admin' ? (
+                      <>
+                        <button
+                          onClick={() => handleUserDetails(user._id)}
+                          className="bg-blue-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                        >
+                          Details
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user._id, user.name)}
+                          className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      // Non-admins cannot see details. Members can request payment for themselves.
+                      currentUser?.id === user._id && (
+                        <button
+                          onClick={() => handleRequestPayment(user._id)}
+                          className="bg-yellow-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-yellow-700 transition-colors"
+                        >
+                          Request Payment
+                        </button>
+                      )
+                    )}
                   </td>
                 </tr>
               ))}

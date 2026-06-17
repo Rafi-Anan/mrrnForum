@@ -28,7 +28,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get("/me", authMiddleware, getMyProfile);
-router.get("/", authMiddleware, adminMiddleware, getAllUsers);
+// Allow authenticated users to list users; controller will limit fields for non-admins
+router.get("/", authMiddleware, getAllUsers);
 router.post("/", authMiddleware, adminMiddleware, upload.fields([{ name: 'profilePhoto' }, { name: 'nid' }]), createUser);
 router.put("/:id", authMiddleware, adminMiddleware, upload.fields([{ name: 'profilePhoto' }, { name: 'nid' }]), updateUser);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUser);

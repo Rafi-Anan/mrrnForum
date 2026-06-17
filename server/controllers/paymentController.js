@@ -19,6 +19,11 @@ export const getUserPayments = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    // Only allow if requester is admin or requesting their own payments
+    if (req.user.role !== "admin" && req.user.id !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const payments = await Payment.find({ user: userId });
 
     payments.sort((a, b) => {
@@ -36,7 +41,12 @@ export const getUserPayments = async (req, res) => {
 
 export const createPayment = async (req, res) => {
   try {
-    const { userId, amount, month, year, description, status } = req.body;
+    let { userId, amount, month, year, description, status } = req.body;
+
+    // If requester is not admin, force payment user to be the authenticated user
+    if (req.user.role !== "admin") {
+      userId = req.user.id;
+    }
 
     const payment = await Payment.create({
       user: userId,

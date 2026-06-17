@@ -1,4 +1,4 @@
-const backendUrl = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || "https://addin.h2r.online";
+const backendUrl = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || "http://localhost:5001";
 
 const siteConfig = {
   siteName: "AD-Din Professional Forum",
@@ -6,7 +6,7 @@ const siteConfig = {
   email: "rafibstd@gmail.com",
   phone: "+8801303025015",
   address: "Nabinagar, Brahmanbaria, Bangladesh",
-  backendUrl
+  backendUrl: backendUrl,
 };
 
 export default siteConfig;

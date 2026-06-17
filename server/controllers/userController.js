@@ -133,7 +133,21 @@ export const getAllUsers = async (req, res) => {
       };
     });
 
-    res.json(usersWithSummary);
+    // If requester is admin return full details; otherwise return limited fields
+    if (req.user && req.user.role === "admin") {
+      return res.json(usersWithSummary);
+    }
+
+    const limited = usersWithSummary.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      profilePhoto: u.profilePhoto,
+      role: u.role,
+      totalDeposit: u.totalDeposit,
+      dueAmount: u.dueAmount
+    }));
+
+    res.json(limited);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
