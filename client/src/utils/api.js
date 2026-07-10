@@ -2,7 +2,7 @@ import axios from "axios";
 import siteConfig from "../config/siteConfig";
 
 const api = axios.create({
-  baseURL: `${siteConfig.backendUrl}/api`
+  baseURL: `${siteConfig.backendUrl}`
 });
 
 api.interceptors.request.use((config) => {

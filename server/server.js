@@ -1,6 +1,6 @@
 import dns from "dns";
 dns.setServers(['1.1.1.1']);
-import 'dotenv/config';
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
