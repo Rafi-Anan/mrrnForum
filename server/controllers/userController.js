@@ -112,7 +112,9 @@ export const getAllUsers = async (req, res) => {
         (payment) => payment.user.toString() === user._id.toString()
       );
 
-      const totalDeposit = userPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      const totalDeposit = userPayments
+        .filter((payment) => payment.status === "completed")
+        .reduce((sum, payment) => sum + payment.amount, 0);
 
       // Calculate expected amount from Sept 2022 to current month
       let expectedAmount = 0;
@@ -141,6 +143,7 @@ export const getAllUsers = async (req, res) => {
     const limited = usersWithSummary.map((u) => ({
       _id: u._id,
       name: u.name,
+      email: u.email,
       profilePhoto: u.profilePhoto,
       role: u.role,
       totalDeposit: u.totalDeposit,

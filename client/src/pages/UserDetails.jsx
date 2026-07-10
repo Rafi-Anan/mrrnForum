@@ -28,6 +28,9 @@ const UserDetails = () => {
   });
 
   const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const isAdmin = currentUser?.role === "admin";
+  const isOwnProfile = currentUser?.id === userId;
 
   const [selectedPayments, setSelectedPayments] = useState([]);
 
@@ -49,6 +52,11 @@ const UserDetails = () => {
 
   const fetchUserDetails = async () => {
     try {
+      if (!isAdmin && !isOwnProfile) {
+        navigate("/users");
+        return;
+      }
+
       const res = await api.get("/users");
       const foundUser = res.data.find(u => u._id === userId);
       if (foundUser) {
@@ -89,7 +97,8 @@ const UserDetails = () => {
     const createPaymentForMonth = async (monthIndex, year) => {
       const monthName = months[monthIndex - 1];
       const amount = year === 2022 ? 700 : 1000;
-      return api.post("/payments", {
+      const endpoint = isAdmin ? "/payments" : "/payments/request";
+      return api.post(endpoint, {
         userId,
         amount,
         month: monthName,
@@ -112,7 +121,11 @@ const UserDetails = () => {
         created.push(res.data);
       }
 
-      alert(`Created ${created.length} payment${created.length > 1 ? "s" : ""} successfully`);
+      alert(
+        isAdmin
+          ? `Created ${created.length} payment${created.length > 1 ? "s" : ""} successfully`
+          : `Submitted ${created.length} payment request${created.length > 1 ? "s" : ""} for admin approval`
+      );
       setPaymentForm({
         amount: "",
         month: "",
@@ -194,6 +207,7 @@ const UserDetails = () => {
   const paidMonthsForSelectedYear = new Set(
     payments
       .filter((payment) => payment.year === selectedYear)
+      .filter((payment) => payment.status !== "failed")
       .map((payment) => payment.month)
   );
 
@@ -204,7 +218,9 @@ const UserDetails = () => {
     return false;
   };
 
-  const totalDeposit = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+  const totalDeposit = payments
+    .filter((payment) => payment.status === "completed")
+    .reduce((sum, payment) => sum + Number(payment.amount), 0);
 
   const getMonthIndex = (monthName) => months.indexOf(monthName) + 1;
   const feeForYear = (year) => (year === 2022 ? 700 : 1000);
@@ -287,12 +303,14 @@ const UserDetails = () => {
       <div className="bg-white p-6 md:p-8 rounded-lg md:rounded-2xl shadow mb-6 md:mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 className="text-xl md:text-2xl font-semibold">User Information</h2>
-          <button
-            onClick={openEditProfile}
-            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
-          >
-            Edit Profile
-          </button>
+          {isAdmin && (
+            <button
+              onClick={openEditProfile}
+              className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
+            >
+              Edit Profile
+            </button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -315,20 +333,22 @@ const UserDetails = () => {
           </div>
 
           {/* NID */}
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-32 md:w-32 md:h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden mb-3 shadow-lg border-2 border-gray-300">
-              {user.nid ? (
-                <img
-                  src={`${apiBaseUrl}/${user.nid}`}
-                  alt={`${user.name} NID`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-center text-gray-500 text-xs px-2">No NID uploaded</span>
-              )}
+          {isAdmin && (
+            <div className="flex flex-col items-center">
+              <div className="w-24 h-32 md:w-32 md:h-40 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden mb-3 shadow-lg border-2 border-gray-300">
+                {user.nid ? (
+                  <img
+                    src={`${apiBaseUrl}/${user.nid}`}
+                    alt={`${user.name} NID`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-center text-gray-500 text-xs px-2">No NID uploaded</span>
+                )}
+              </div>
+              <p className="text-center text-gray-600 font-medium text-xs md:text-sm">NID</p>
             </div>
-            <p className="text-center text-gray-600 font-medium text-xs md:text-sm">NID</p>
-          </div>
+          )}
 
           {/* User Details */}
           <div className="sm:col-span-2 lg:col-span-1">
@@ -365,7 +385,9 @@ const UserDetails = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-600">Joined</p>
-                <p className="text-base md:text-lg font-semibold text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="text-base md:text-lg font-semibold text-gray-900">
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                </p>
               </div>
             </div>
           </div>
@@ -482,26 +504,28 @@ const UserDetails = () => {
               onClick={() => setShowAddPayment(!showAddPayment)}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base"
             >
-              {showAddPayment ? "Cancel" : "Add Payment"}
+              {showAddPayment ? "Cancel" : isAdmin ? "Add Payment" : "Request Payment"}
             </button>
-            <button
-              onClick={async () => {
-                if (selectedPayments.length === 0) return;
-                if (!window.confirm(`Delete ${selectedPayments.length} selected payment(s)? This action cannot be undone.`)) return;
-                try {
-                  await api.post('/payments/bulk-delete', { ids: selectedPayments });
-                  alert('Selected payments deleted');
-                  setSelectedPayments([]);
-                  fetchUserPayments();
-                } catch (error) {
-                  alert(error.response?.data?.message || 'Failed to delete selected payments');
-                }
-              }}
-              className={`bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm md:text-base ${selectedPayments.length===0? 'opacity-50 cursor-not-allowed':''}`}
-              disabled={selectedPayments.length===0}
-            >
-              Delete Selected
-            </button>
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  if (selectedPayments.length === 0) return;
+                  if (!window.confirm(`Delete ${selectedPayments.length} selected payment(s)? This action cannot be undone.`)) return;
+                  try {
+                    await api.post('/payments/bulk-delete', { ids: selectedPayments });
+                    alert('Selected payments deleted');
+                    setSelectedPayments([]);
+                    fetchUserPayments();
+                  } catch (error) {
+                    alert(error.response?.data?.message || 'Failed to delete selected payments');
+                  }
+                }}
+                className={`bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm md:text-base ${selectedPayments.length===0? 'opacity-50 cursor-not-allowed':''}`}
+                disabled={selectedPayments.length===0}
+              >
+                Delete Selected
+              </button>
+            )}
           </div>
         </div>
 
@@ -533,7 +557,7 @@ const UserDetails = () => {
         {/* Add Payment Form */}
         {showAddPayment && (
           <div className="mb-6 p-4 border rounded-lg bg-gray-50 overflow-x-auto">
-            <h3 className="text-lg font-semibold mb-4">Add New Payment</h3>
+            <h3 className="text-lg font-semibold mb-4">{isAdmin ? "Add New Payment" : "Request Payment"}</h3>
             <form onSubmit={handlePaymentSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
@@ -606,21 +630,23 @@ const UserDetails = () => {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={paymentForm.status}
-                  onChange={handlePaymentChange}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="completed">Completed</option>
-                  <option value="pending">Pending</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </div>
+              {isAdmin && (
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={paymentForm.status}
+                    onChange={handlePaymentChange}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </div>
+              )}
 
               <div className="sm:col-span-2 lg:col-span-3">
                 <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
@@ -653,7 +679,7 @@ const UserDetails = () => {
                   type="submit"
                   className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm md:text-base"
                 >
-                  Add Payment
+                  {isAdmin ? "Add Payment" : "Submit Request"}
                 </button>
               </div>
             </form>
@@ -665,16 +691,18 @@ const UserDetails = () => {
           <table className="w-full text-xs md:text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedPayments.length === payments.length && payments.length > 0}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedPayments(payments.map(p => p._id));
-                      else setSelectedPayments([]);
-                    }}
-                  />
-                </th>
+                {isAdmin && (
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedPayments.length === payments.length && payments.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedPayments(payments.map(p => p._id));
+                        else setSelectedPayments([]);
+                      }}
+                    />
+                  </th>
+                )}
                 <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Month/Year
                 </th>
@@ -690,24 +718,28 @@ const UserDetails = () => {
                 <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                {isAdmin && (
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {payments.map((payment) => (
                 <tr key={payment._id} className="hover:bg-gray-50">
-                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedPayments.includes(payment._id)}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedPayments(prev => [...prev, payment._id]);
-                        else setSelectedPayments(prev => prev.filter(id => id !== payment._id));
-                      }}
-                    />
-                  </td>
+                  {isAdmin && (
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedPayments.includes(payment._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedPayments(prev => [...prev, payment._id]);
+                          else setSelectedPayments(prev => prev.filter(id => id !== payment._id));
+                        }}
+                      />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
                     <div className="text-xs font-medium text-gray-900">
                       {payment.month.substring(0, 3)} {payment.year}
@@ -737,14 +769,16 @@ const UserDetails = () => {
                   <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-500">
                     {new Date(payment.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
                   </td>
-                  <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium">
-                    <button
-                      onClick={() => handleDeletePayment(payment._id, `${payment.month} ${payment.year}`)}
-                      className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded hover:bg-red-700 transition-colors text-xs"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  {isAdmin && (
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium">
+                      <button
+                        onClick={() => handleDeletePayment(payment._id, `${payment.month} ${payment.year}`)}
+                        className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded hover:bg-red-700 transition-colors text-xs"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -71,7 +71,7 @@ function App() {
           <Route
             path="/users"
             element={
-              <ProtectedRoute adminOnly={true}>
+              <ProtectedRoute>
                 <Users />
               </ProtectedRoute>
             }
@@ -80,7 +80,7 @@ function App() {
           <Route
             path="/users/:userId"
             element={
-              <ProtectedRoute adminOnly={true}>
+              <ProtectedRoute>
                 <UserDetails />
               </ProtectedRoute>
             }

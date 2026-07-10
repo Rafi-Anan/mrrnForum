@@ -1,7 +1,10 @@
 import express from "express";
 import {
   getUserPayments,
+  getPendingPayments,
   createPayment,
+  createPaymentRequest,
+  reviewPaymentRequest,
   updatePayment,
   deletePayment,
   deletePayments
@@ -14,8 +17,16 @@ const router = express.Router();
 // Get payments for a specific user (admins or the user themselves)
 router.get("/user/:userId", authMiddleware, getUserPayments);
 
-// Create a new payment (admins can create for any user; members can create for themselves)
-router.post("/", authMiddleware, createPayment);
+// Get pending payment requests for admin approval
+router.get("/requests/pending", authMiddleware, adminMiddleware, getPendingPayments);
+router.get("/pending", authMiddleware, adminMiddleware, getPendingPayments);
+
+// Approve or decline a pending payment request
+router.put("/requests/:id", authMiddleware, adminMiddleware, reviewPaymentRequest);
+
+// Members create approval requests; admins create real payments directly
+router.post("/request", authMiddleware, createPaymentRequest);
+router.post("/", authMiddleware, adminMiddleware, createPayment);
 
 // Update a payment
 router.put("/:id", authMiddleware, adminMiddleware, updatePayment);

@@ -5,6 +5,8 @@ import siteConfig from "../config/siteConfig";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [paymentRequestError, setPaymentRequestError] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [userForm, setUserForm] = useState({
@@ -19,6 +21,7 @@ const Users = () => {
   const navigate = useNavigate();
   const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const isAdmin = currentUser?.role === "admin";
 
   useEffect(() => {
     fetchUsers();
@@ -28,10 +31,24 @@ const Users = () => {
     try {
       const res = await api.get("/users");
       setUsers(res.data);
+      if (isAdmin) {
+        await fetchPendingRequests();
+      }
     } catch (error) {
       alert("Failed to fetch users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      setPaymentRequestError("");
+      const res = await api.get("/payments/requests/pending");
+      setPendingRequests(res.data);
+    } catch (error) {
+      setPendingRequests([]);
+      setPaymentRequestError(error.response?.data?.message || "Failed to fetch payment requests");
     }
   };
 
@@ -101,20 +118,21 @@ const Users = () => {
       return alert("You can only request payment for your own account.");
     }
 
-    const amount = prompt("Enter amount to request:");
-    if (!amount) return;
-    const month = prompt("Enter month (e.g., January):");
-    if (!month) return;
-    const year = prompt("Enter year (e.g., 2026):");
-    if (!year) return;
-    const description = prompt("Description (optional):") || "";
+    navigate(`/users/${userId}`);
+  };
+
+  const handlePaymentRequestDecision = async (paymentId, status) => {
+    const action = status === "approved" ? "approve" : "decline";
+    if (!window.confirm(`Are you sure you want to ${action} this payment request?`)) {
+      return;
+    }
 
     try {
-      await api.post("/payments", { amount: Number(amount), month, year, description });
-      alert("Payment request submitted");
+      await api.put(`/payments/requests/${paymentId}`, { status });
+      alert(`Payment request ${status}`);
       fetchUsers();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to submit payment request");
+      alert(error.response?.data?.message || "Failed to update payment request");
     }
   };
 
@@ -135,7 +153,7 @@ const Users = () => {
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">Users Management</h1>
-        {currentUser?.role === 'admin' && (
+        {isAdmin && (
           <button
             onClick={() => setShowAddUser(true)}
             className="w-full sm:w-auto bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
@@ -144,6 +162,88 @@ const Users = () => {
           </button>
         )}
       </div>
+
+      {isAdmin && pendingRequests.length > 0 && (
+        <div className="bg-white rounded-lg md:rounded-2xl shadow overflow-hidden mb-6">
+          <div className="border-b px-4 py-3">
+            <h2 className="text-lg md:text-xl font-semibold">Payment Requests</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs md:text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Member
+                  </th>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Month/Year
+                  </th>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Requested
+                  </th>
+                  <th className="px-2 py-1.5 md:py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {pendingRequests.map((payment) => (
+                  <tr key={payment._id} className="hover:bg-gray-50">
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                      <div className="text-xs md:text-sm font-medium text-gray-900">
+                        {payment.user?.name || "Unknown"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {payment.user?.email || "-"}
+                      </div>
+                    </td>
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-900">
+                      {payment.month} {payment.year}
+                    </td>
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-900">
+                      ${Number(payment.amount).toFixed(2)}
+                    </td>
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap">
+                      <div className="text-xs text-gray-500 truncate max-w-xs">
+                        {payment.description || "-"}
+                      </div>
+                    </td>
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs text-gray-500">
+                      {new Date(payment.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium space-x-0.5">
+                      <button
+                        onClick={() => handlePaymentRequestDecision(payment._id, "approved")}
+                        className="bg-green-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handlePaymentRequestDecision(payment._id, "declined")}
+                        className="bg-red-600 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                      >
+                        Decline
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && paymentRequestError && (
+        <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+          Payment requests could not be loaded. Please restart the backend server and try again.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 mb-6">
         <div className="rounded-lg md:rounded-2xl border border-blue-200 bg-blue-50 p-4">
@@ -376,7 +476,7 @@ const Users = () => {
                     ${user.dueAmount?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-2 py-1.5 md:py-2 whitespace-nowrap text-xs font-medium space-x-0.5">
-                    {currentUser?.role === 'admin' ? (
+                    {isAdmin ? (
                       <>
                         <button
                           onClick={() => handleUserDetails(user._id)}

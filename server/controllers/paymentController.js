@@ -1,4 +1,5 @@
 import Payment from "../models/Payment.js";
+import PaymentRequest from "../models/PaymentRequest.js";
 
 const monthOrder = {
   January: 1,
@@ -24,7 +25,7 @@ export const getUserPayments = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const payments = await Payment.find({ user: userId });
+    const payments = await Payment.find({ user: userId, status: { $ne: "pending" } });
 
     payments.sort((a, b) => {
       if (a.year !== b.year) {
@@ -39,14 +40,22 @@ export const getUserPayments = async (req, res) => {
   }
 };
 
+export const getPendingPayments = async (req, res) => {
+  try {
+    const requests = await PaymentRequest.find({ status: "pending" })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (error) {
+    console.error("Failed to fetch payment requests:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createPayment = async (req, res) => {
   try {
-    let { userId, amount, month, year, description, status } = req.body;
-
-    // If requester is not admin, force payment user to be the authenticated user
-    if (req.user.role !== "admin") {
-      userId = req.user.id;
-    }
+    const { userId, amount, month, year, description, status } = req.body;
 
     const payment = await Payment.create({
       user: userId,
@@ -62,6 +71,106 @@ export const createPayment = async (req, res) => {
     res.status(201).json({
       message: "Payment created successfully",
       payment: populated
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Payment already exists for this month/year" });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createPaymentRequest = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { amount, month, year, description } = req.body;
+
+    const existingPayment = await Payment.findOne({ user: userId, month, year });
+    if (existingPayment) {
+      return res.status(400).json({ message: "Payment already exists for this month/year" });
+    }
+
+    const existingRequest = await PaymentRequest.findOne({
+      user: userId,
+      month,
+      year,
+      status: "pending"
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ message: "A payment request is already pending for this month/year" });
+    }
+
+    const paymentRequest = await PaymentRequest.create({
+      user: userId,
+      amount,
+      month,
+      year,
+      description,
+      status: "pending"
+    });
+
+    const populatedRequest = await PaymentRequest.findById(paymentRequest._id).populate("user", "name email");
+
+    res.status(201).json({
+      message: "Payment request submitted successfully",
+      paymentRequest: populatedRequest
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const reviewPaymentRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["approved", "declined"].includes(status)) {
+      return res.status(400).json({ message: "Invalid request status" });
+    }
+
+    const paymentRequest = await PaymentRequest.findById(id);
+
+    if (!paymentRequest) {
+      return res.status(404).json({ message: "Payment request not found" });
+    }
+
+    if (paymentRequest.status !== "pending") {
+      return res.status(400).json({ message: "Payment request has already been reviewed" });
+    }
+
+    paymentRequest.status = status;
+    paymentRequest.reviewedAt = new Date();
+
+    let payment = null;
+    if (status === "approved") {
+      const existingPayment = await Payment.findOne({
+        user: paymentRequest.user,
+        month: paymentRequest.month,
+        year: paymentRequest.year
+      });
+
+      if (existingPayment) {
+        return res.status(400).json({ message: "Payment already exists for this month/year" });
+      }
+
+      payment = await Payment.create({
+        user: paymentRequest.user,
+        amount: paymentRequest.amount,
+        month: paymentRequest.month,
+        year: paymentRequest.year,
+        description: paymentRequest.description,
+        status: "completed"
+      });
+    }
+
+    await paymentRequest.save();
+
+    res.json({
+      message: status === "approved" ? "Payment request approved" : "Payment request declined",
+      paymentRequest,
+      payment
     });
   } catch (error) {
     if (error.code === 11000) {
