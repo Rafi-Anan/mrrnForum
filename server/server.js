@@ -21,12 +21,19 @@ const __dirname = path.resolve();
 
 
 
-if(process.env.NODE_ENV !== "production") {
-  app.use(cors({
-    origin: "http://localhost:5173",
+const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_ORIGIN]
+  .filter(Boolean)
+  .flatMap((origins) => origins.split(","))
+  .map((origin) => origin.trim());
 
-  }));
-}
+app.use(cors({
+  origin(origin, callback) {
+    // Requests without an Origin header include Render health checks and
+    // same-origin server requests.
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+}));
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
