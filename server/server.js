@@ -19,28 +19,16 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const __dirname = path.resolve();
 
-
-
-const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_ORIGIN]
-  .filter(Boolean)
-  .flatMap((origins) => origins.split(","))
-  .map((origin) => origin.trim());
-
-app.use(cors({
-  origin(origin, callback) {
-    // Requests without an Origin header include Render health checks and
-    // same-origin server requests.
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
-  },
-}));
+if(process.env.NODE_ENV !== "production") {
+  app.use(cors());
+}
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-app.get("/", (req, res) => {
-   res.sendFile(path.join(__dirname, "../client/dist/index.html"))
-});
+// app.get("/", (req, res) => {
+//    res.sendFile(path.join(__dirname, "../client/dist/index.html"))
+// });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
