@@ -25,7 +25,7 @@ function Register() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       alert("Registration successful");
-      navigate("/profile");
+      navigate("/login");
     } catch (error) {
       alert(error.response?.data?.message || "Registration failed");
     }

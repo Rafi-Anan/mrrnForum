@@ -1,7 +1,9 @@
 import { useState } from "react";
 import api from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -23,7 +25,7 @@ function Login() {
 
       alert("Login successful");
       // Force a full navigation so stored auth is picked up across the app
-      window.location.href = "/profile";
+      navigate("/profile");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");
     }
