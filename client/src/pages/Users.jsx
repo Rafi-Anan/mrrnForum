@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import siteConfig from "../config/siteConfig";
+import { getStoredUser } from "../utils/authStorage";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -20,7 +21,8 @@ const Users = () => {
   });
   const navigate = useNavigate();
   const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
-  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  // const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const currentUser = getStoredUser();
   const isAdmin = currentUser?.role === "admin";
 
   useEffect(() => {

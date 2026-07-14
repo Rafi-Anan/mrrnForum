@@ -2,12 +2,14 @@ import { Link } from "react-router-dom";
 import siteConfig from "../config/siteConfig";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getStoredUser } from "../utils/authStorage";
 
 function Navbar() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  // const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = getStoredUser();
 
   const logout = () => {
     localStorage.removeItem("token");

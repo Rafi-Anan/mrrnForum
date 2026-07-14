@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
 import CommentList from "./../componets/CommentList";
+import { getStoredUser } from "../utils/authStorage";
 
 function PostDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  // const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = getStoredUser();
 
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
