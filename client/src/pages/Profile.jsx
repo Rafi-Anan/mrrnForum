@@ -3,15 +3,35 @@ import api from "../utils/api";
 
 function Profile() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const res = await api.get("/users/me");
-      setData(res.data);
+      try {
+        setError("");
+        const res = await api.get("/users/me");
+
+        if (!res.data?.user || !Array.isArray(res.data.posts)) {
+          setData(null);
+          setError("Profile API returned an invalid response. Check VITE_API_URL and the API deployment.");
+          return;
+        }
+
+        // setData(res.data);
+        setData(res.data);
+      } catch (requestError) {
+        setData(null);
+        setError(requestError.response?.data?.message || "Could not load your profile. Check the API URL and server status.");
+      }
     };
 
     fetchProfile();
   }, []);
+
+  // if (!data) return <div className="max-w-4xl mx-auto px-4 py-10">Loading...</div>;
+  if (error) {
+    return <div className="max-w-4xl mx-auto px-4 py-10 text-red-700">{error}</div>;
+  }
 
   if (!data) return <div className="max-w-4xl mx-auto px-4 py-10">Loading...</div>;
 
