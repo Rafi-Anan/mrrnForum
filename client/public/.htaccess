@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Vite asset files are served normally. All other requests are handled by
+# React Router through index.html, so refreshing a nested route does not 404.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
