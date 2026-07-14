@@ -8,6 +8,7 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [paymentRequestError, setPaymentRequestError] = useState("");
+  const [usersError, setUsersError] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [userForm, setUserForm] = useState({
@@ -31,13 +32,22 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
+      setUsersError("");
       const res = await api.get("/users");
+      // setUsers(res.data);
+      if (!Array.isArray(res.data)) {
+        setUsers([]);
+        setUsersError("The users API did not return a user list. Check VITE_API_URL and the API deployment.");
+        return;
+      }
+
       setUsers(res.data);
       if (isAdmin) {
         await fetchPendingRequests();
       }
     } catch (error) {
-      alert("Failed to fetch users");
+      setUsers([]);
+      setUsersError(error.response?.data?.message || "Failed to fetch users. Check the API URL and server status.");
     } finally {
       setLoading(false);
     }
@@ -47,6 +57,13 @@ const Users = () => {
     try {
       setPaymentRequestError("");
       const res = await api.get("/payments/requests/pending");
+      // setPendingRequests(res.data);
+      if (!Array.isArray(res.data)) {
+        setPendingRequests([]);
+        setPaymentRequestError("Payment requests API did not return a list.");
+        return;
+      }
+
       setPendingRequests(res.data);
     } catch (error) {
       setPendingRequests([]);
@@ -164,6 +181,12 @@ const Users = () => {
           </button>
         )}
       </div>
+
+      {usersError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {usersError}
+        </div>
+      )}
 
       {isAdmin && pendingRequests.length > 0 && (
         <div className="bg-white rounded-lg md:rounded-2xl shadow overflow-hidden mb-6">

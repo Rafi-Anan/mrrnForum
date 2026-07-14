@@ -60,6 +60,11 @@ const UserDetails = () => {
       }
 
       const res = await api.get("/users");
+      if (!Array.isArray(res.data)) {
+        alert("The users API did not return a user list. Check the API deployment.");
+        return;
+      }
+
       const foundUser = res.data.find(u => u._id === userId);
       if (foundUser) {
         setUser(foundUser);
@@ -75,7 +80,8 @@ const UserDetails = () => {
   const fetchUserPayments = async () => {
     try {
       const res = await api.get(`/payments/user/${userId}`);
-      setPayments(res.data);
+      // setPayments(res.data);
+      setPayments(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Failed to fetch payments:", error);
       // Payments might not exist yet, so don't show error

@@ -8,7 +8,8 @@ function AdminDashboard() {
 
   const fetchUsers = async () => {
     const res = await api.get("/users");
-    setUsers(res.data);
+    // setUsers(res.data);
+    setUsers(Array.isArray(res.data) ? res.data : []);
   };
 
   const apiBaseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || siteConfig.backendUrl;
