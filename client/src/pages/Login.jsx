@@ -25,6 +25,7 @@ function Login() {
 
       alert("Login successful");
       // Force a full navigation so stored auth is picked up across the app
+     // Refresh the page to update the UI
       navigate("/users");
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");
